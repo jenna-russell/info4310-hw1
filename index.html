@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title> JJR265 Homework 1</title>
+  <meta charset="utf-8" />
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+  <script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+  <style>
+    body {
+      font-family: Avenir, 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    }
+
+    .neighbor {
+      fill: #EEE;
+      stroke: white;
+      stroke-width: 1px;
+    }
+
+    #p1 {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    h1 {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      color: #082600;
+    }
+
+    .axis path {
+      stroke: #082600;
+    }
+
+    h2 {
+      font-style: italic;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      color: #3e682b;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <h1> Trees Planted in San Fransisco </h1>
+  <h2> A look at trees planted in San Fransisco over the last 50 years </h2>
+
+  <svg id="p1" width="1132" height="700"></svg>
+
+  <script>
+    const svg = d3.select("#p1");
+    const width = svg.attr("width");
+    const height = svg.attr("height");
+    const margin = { top: 130, right: 130, bottom: 130, left: 130 };
+    const sfWidth = width - margin.left - margin.right;
+    const sfHeight = height - margin.top - margin.bottom;
+    const annotations = svg.append("g").attr("id", "gridlines");
+    let sflinechart = svg.append("g").attr("id", "graphs")
+      .attr("transform", "translate(" + (margin.left + 10) + "," + margin.top + ")");
+
+
+    const visualize = async () => {
+
+      var trees = await d3.csv("Street_Tree_List-Jenna_FILTERED.csv");
+      var yearPlanted = await d3.csv("treesPlanted.csv");
+
+
+      const timeParser = d3.timeParse('%Y');
+      yearPlanted.forEach(d => {
+        d["YearDate"] = timeParser(d["Year"])
+        d["Trees"] = parseInt(d["Trees"])
+      });
+
+      console.log(yearPlanted);
+
+      const yearExtent = d3.extent(yearPlanted, d => d["YearDate"]);
+      const yearScale = d3.scaleTime().domain(yearExtent).range([0, sfWidth]);
+
+      const treesExtent = d3.extent(yearPlanted, d => d["Trees"]);
+      const treesScale = d3.scaleLinear().domain(treesExtent).range([sfHeight, 0])
+
+      console.log(treesExtent);
+      console.log(yearExtent);
+
+      let leftAxis = d3.axisLeft(treesScale)
+      annotations.append("g")
+        .attr("class", "y axis")
+        .attr("fill", "#082600")
+        .attr("transform", "translate(" + (margin.left + 10) + "," + margin.top + ")")
+        .call(leftAxis)
+
+      annotations.append("text")
+        .attr("transform", "translate(" + (80) + "," + (height / 2) + ")rotate(-90)")
+        // .attr("transform", "rotate(-90)")
+        .style("text-anchor", "middle")
+        .text("Number of Trees Planted")
+
+      let bottomAxis = d3.axisBottom(yearScale)
+
+      annotations.append("g")
+        .attr("class", "x axis")
+        .attr("fill", "#082600")
+        .attr("transform", "translate(" + (margin.left + 10) + "," + (sfHeight + margin.top) + ")")
+        .call(bottomAxis)
+
+      annotations.append("text")
+        .attr("transform", "translate(" + (sfWidth / 2 + margin.left + 22) + "," + (sfHeight + margin.top + 50) + ")")
+        .style("text-anchor", "middle")
+        .text("Year")
+
+      var lineGener = d3.line()
+        .x(d => yearScale(d["YearDate"]))
+        .y(d => treesScale(d["Trees"]))
+        .curve(d3.curveMonotoneX);
+
+      sflinechart.append("path").datum(yearPlanted)
+        .attr("class", "line")
+        .attr("fill", "none")
+        .attr("stroke", "#83b153")
+        .attr("stroke-width", 3)
+        .attr("opacity", 0.75)
+        .attr("d", lineGener);
+
+      sflinechart.selectAll("circle").data(yearPlanted)
+        .join("circle")
+        .attr("r", 5)
+        .attr("fill", "#83b153")
+        .attr("cx", d => yearScale(d["YearDate"]))
+        .attr("cy", d => treesScale(d["Trees"]))
+
+
+      const annotations2 = [
+        {
+          note: {
+            label: "4437 trees were planted; the most of any recorded year ",
+            title: "1998"
+          },
+          x: 640,
+          y: 131,
+          // data: { yearDate: timeParser(2008), Trees = 1165 },
+          dy: 40,
+          dx: -75,
+          wrap: 10,
+          color: ["#082600"]
+        }
+      ]
+
+      const annotations3 = [
+        {
+          note: {
+            label: "Tree reporting becomes consistent",
+            title: "1976",
+
+          },
+          x: 247,
+          y: 531,
+          // data: { yearDate: timeParser(2008), Trees = 1165 },
+          dy: -50,
+          dx: 30,
+          wrap: 300,
+          color: ["#082600"]
+        }
+      ]
+
+      const annotations4 = [
+        {
+          note: {
+            label: "SF pledges to plant 50,000 trees in next 20 years",
+            title: "2014"
+          },
+          x: 923,
+          y: 428,
+          // data: { yearDate: timeParser(2008), Trees = 1165 },
+          dy: -150,
+          dx: 10,
+          wrap: 300,
+          color: ["#082600"]
+        }
+      ]
+
+      // Add annotation to the chart
+      const makeAnnotations = d3.annotation()
+        .annotations(annotations2)
+      d3.select("#p1")
+        .append("g")
+        .call(makeAnnotations)
+
+      const makeAnnotations3 = d3.annotation()
+        .annotations(annotations3)
+      d3.select("#p1")
+        .append("g")
+        .call(makeAnnotations3)
+
+      const makeAnnotations4 = d3.annotation()
+        .annotations(annotations4)
+      d3.select("#p1")
+        .append("g")
+        .call(makeAnnotations4)
+
+    };
+
+
+    visualize();
+
+  </script>
