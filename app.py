@@ -5,7 +5,7 @@ app.wsi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/', index_f
 
 @app.route('/', methods=['GET'])
  def homepg():
-  return index.html
+  return render_template("index.html")
 
 
 if __name__ == "__main__":
