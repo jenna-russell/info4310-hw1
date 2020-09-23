@@ -6,7 +6,7 @@ app.wsi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/', index_f
 @app.route('/', methods=['GET'])
 def home():
   # return render_template("index.html")
-  return "Jenna Russell: https://jjr265-info4310-hw1/static.herokuapp.com"
+  return "Jenna Russell: https://jjr265-info4310-hw1.herokuapp.com/static/index.html"
 
 
 if __name__ == "__main__":
